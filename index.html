@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PassportPic — Official Passport and Visa Photo Sizes in Your Browser</title>
+<meta name="description" content="PassportPic crops your photo to official passport and visa sizes — India passport, US visa, UK and Schengen visas, PAN card — with a face guide, background colour fill, cutout assist, and a 4x6 print sheet. Everything runs in your browser; nothing is uploaded.">
+<link rel="canonical" href="https://passportpic-app.vercel.app">
+<meta property="og:title" content="PassportPic — Official Passport and Visa Photo Sizes in Your Browser">
+<meta property="og:description" content="Crop to official passport and visa sizes, fix the background, and print a 4x6 sheet of copies. Your photos never leave your browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://passportpic-app.vercel.app">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PassportPic — Official Passport and Visa Photo Sizes in Your Browser">
+<meta name="twitter:description" content="Crop to official passport and visa sizes, fix the background, and print a 4x6 sheet of copies. Your photos never leave your browser.">
+<meta name="theme-color" content="#0B0B0F">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">P</span><span class="brand-name">PassportPic</span></div>
+  <p class="tagline">Official passport and visa photo sizes, cropped in your browser. No uploads, no accounts.</p>
+</header>
+<main class="layout">
+  <section class="panel" aria-label="Photo">
+    <h2>Photo</h2>
+    <div class="dropzone" id="dropZone" tabindex="0">
+      <p><strong>Drop a photo here</strong> or use the picker below.</p>
+      <p class="muted">You can also paste an image from your clipboard (Ctrl+V / Cmd+V).</p>
+      <label class="btn" for="fileInput">Choose photo</label>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+    </div>
+    <div class="row">
+      <button type="button" class="btn secondary" id="sampleBtn">Load sample portrait</button>
+      <button type="button" class="btn secondary" id="clearBtn">Clear photo</button>
+    </div>
+    <p class="selected" id="photoNameText">No photo loaded</p>
+    <p class="muted" id="emptyNote">No photo yet. Load the sample portrait to try every control with zero uploads.</p>
+    <p class="muted">Drag on the preview to reposition the photo, scroll over it to zoom. Rotation and zoom sliders are below.</p>
+  </section>
+
+  <section class="panel preview-panel" aria-label="Preview">
+    <h2>Preview</h2>
+    <div class="view-toggle" role="group" aria-label="Before or after">
+      <button type="button" class="btn secondary" id="beforeBtn">Before</button>
+      <button type="button" class="btn secondary" id="afterBtn">After</button>
+    </div>
+    <canvas id="previewCanvas" width="640" height="480"></canvas>
+    <p class="dimension" id="dimensionText"></p>
+    <p class="muted" id="presetNoteText"></p>
+    <label class="check"><input type="checkbox" id="guideCheck" checked> Show face guide (oval, eye line, head-height lines)</label>
+    <p class="summary" id="sheetInfoText"></p>
+    <p class="status" id="statusText">Load a photo or the sample portrait to start.</p>
+  </section>
+
+  <section class="panel" aria-label="Size and background settings">
+    <h2>Size</h2>
+    <label class="field">Official size
+      <select id="presetSelect">
+        <option value="india-passport" selected>India Passport — 2 x 2 inch</option>
+        <option value="us-visa">US Visa — 2 x 2 inch</option>
+        <option value="uk-visa">UK Visa — 35 x 45 mm</option>
+        <option value="schengen-visa">Schengen Visa — 35 x 45 mm</option>
+        <option value="pan-card">PAN Card — 25 x 35 mm</option>
+        <option value="aadhaar-style">Aadhaar-style crop — 35 x 45 mm</option>
+      </select>
+    </label>
+
+    <h2>Position</h2>
+    <label class="field">Zoom <span id="zoomValue">1.0x</span>
+      <input type="range" id="zoomRange" min="100" max="400" step="10" value="100">
+    </label>
+    <label class="field">Rotation <span id="rotationValue">0°</span>
+      <input type="range" id="rotationRange" min="-45" max="45" value="0">
+    </label>
+    <button type="button" class="btn secondary" id="resetPosBtn">Reset position</button>
+    <p class="muted">Positioning is clamped so the crop frame always stays fully covered by the photo.</p>
+
+    <h2>Background</h2>
+    <label class="field">Background colour
+      <select id="bgSelect">
+        <option value="#FFFFFF" selected>White</option>
+        <option value="#DCE9F5">Light blue</option>
+        <option value="#E5E5E5">Light grey</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="cutoutCheck"> Cutout assist: remove the photo's own background colour first</label>
+    <div id="toleranceRow" hidden>
+      <label class="field">Cutout tolerance <span id="toleranceValue">25%</span>
+        <input type="range" id="toleranceRange" min="0" max="100" value="25">
+      </label>
+    </div>
+    <p class="muted">The cutout assist keys out colours near the photo's own background (sampled from its corners). It works best on plain, even backgrounds; it will soften hair edges and struggle with patterned backgrounds. When it is off, the chosen colour only fills the area outside the photo, if any.</p>
+
+    <h2>Export</h2>
+    <label class="field">Copies on the 4 x 6 inch sheet <span id="copyValue"></span>
+      <input type="range" id="copyRange" min="1" max="6" value="4">
+    </label>
+    <label class="field">Single photo format
+      <select id="formatSelect">
+        <option value="png" selected>PNG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
+    </label>
+    <div class="row">
+      <button type="button" class="btn" id="exportBtn" disabled>Download photo</button>
+      <button type="button" class="btn secondary" id="exportSheetBtn" disabled>Download 4 x 6 sheet</button>
+    </div>
+    <p class="muted">The single photo exports at the exact preset size at 300 DPI. The sheet is a 1200 x 1800 px PNG (4 x 6 inch at 300 DPI) with your chosen number of copies, ready to print.</p>
+  </section>
+</main>
+<footer class="footer">
+  <p>Built by <a href="https://github.com/codewithkrrish/passportpic">krrish</a> · <a href="https://www.instagram.com/krrishx.ai">Instagram</a></p>
+  <p>Your photos are processed locally in your browser and never uploaded.</p>
+</footer>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
